@@ -21,6 +21,10 @@ The system provides administrators with a secure and efficient environment for c
 
 Built with modern technologies and cloud infrastructure, the platform is designed for scalability, security, maintainability, and long-term growth.
 
+
+Official website: [https://hamroh.org](https://hamroh.org)
+
+
 ---
 
 ## Key Features
@@ -167,5 +171,3 @@ Hamroh is an organization focused on creating educational, cultural, and communi
 ## About Hamroh
 
 Hamroh is an organization focused on creating educational, cultural, and community-driven opportunities. The Hamroh Admin Panel serves as the operational platform that supports the management of programs, events, activities, and participant engagement.
-
-Official website: [https://hamroh.org](https://hamroh.org)
