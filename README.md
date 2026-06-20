@@ -1,7 +1,7 @@
 # HAMROH Admin Panel
 
 <p align="center">
-  <img src="./assets/hamroh-logo.png" alt="Hamroh Logo" width="250"/>
+  <img src="./assets/logo.svg" alt="Hamroh Logo" width="250"/>
 </p>
 
 <h1 align="center">HAMROH ADMIN PANEL</h1>
