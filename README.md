@@ -1,98 +1,164 @@
+# HAMROH Admin Panel
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="./assets/hamroh-logo.png" alt="Hamroh Logo" width="250"/>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<h1 align="center">HAMROH ADMIN PANEL</h1>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+Administrative Management Platform for Events, Activities, and Community Operations
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Overview
 
-## Project setup
+The Hamroh Admin Panel is a centralized administrative platform developed to manage and streamline organizational operations, events, activities, participant records, and internal communications.
 
-```bash
-$ yarn install
-```
+The system provides administrators with a secure and efficient environment for creating and managing events, monitoring registrations, handling participant information, distributing announcements, and generating reports.
 
-## Compile and run the project
+Built with modern technologies and cloud infrastructure, the platform is designed for scalability, security, maintainability, and long-term growth.
 
-```bash
-# development
-$ yarn run start
+---
 
-# watch mode
-$ yarn run start:dev
+## Key Features
 
-# production mode
-$ yarn run start:prod
-```
+### Event Management
 
-## Run tests
+- Create, update, publish, and archive events
+- Manage event schedules and timelines
+- Monitor participant registrations
+- Assign event coordinators
+- Track event status
 
-```bash
-# unit tests
-$ yarn run test
+### Activity Management
 
-# e2e tests
-$ yarn run test:e2e
+- Create and manage organizational activities
+- Organize activities by category
+- Schedule recurring activities
+- Track engagement and participation
 
-# test coverage
-$ yarn run test:cov
-```
+### Participant Management
 
-## Deployment
+- Store participant information
+- Manage registrations
+- Track attendance
+- Search and filter participant records
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### User Management
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Administrator account management
+- Role-based permissions
+- User activity monitoring
+- Secure authentication and authorization
 
-```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
-```
+### Communication System
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- Automated email notifications
+- Event reminders
+- Announcements and updates
+- Password recovery emails
 
-## Resources
+### Reporting & Analytics
 
-Check out a few resources that may come in handy when working with NestJS:
+- Event statistics
+- Participation reports
+- Activity performance insights
+- Administrative dashboards
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## Technology Stack
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Backend
 
-## Stay in touch
+| Technology | Purpose |
+|------------|----------|
+| NestJS | Backend Framework |
+| TypeScript | Application Development |
+| Node.js | Runtime Environment |
+| AWS EC2 | Cloud Hosting |
+| AWS S3 | File Storage |
+| AWS SES | Email Delivery |
+| Nodemailer | Email Services |
+| JWT | Authentication |
+| RBAC | Authorization |
+| REST API | API Layer |
+| Docker | Containerization |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Frontend
 
-## License
+| Technology | Purpose |
+|------------|----------|
+| React | User Interface |
+| TypeScript | Frontend Development |
+| Material UI (MUI) | Component Library |
+| TanStack Query | Server State Management |
+| Axios | API Communication |
+| React Router | Routing |
+| React Hook Form | Form Handling |
+| Jest | Testing |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+## Architecture
+
+```text
+Client Application (React + MUI)
+            │
+            ▼
+      REST API Layer
+         (NestJS)
+            │
+            ▼
+ Authentication & Authorization
+      (JWT + RBAC)
+            │
+            ▼
+      Database Services
+            │
+            ▼
+ AWS Infrastructure (EC2, S3, SES)
+
+ Authentication & Authorization
+The platform implements a secure access control system based on JWT authentication and Role-Based Access Control (RBAC).
+Supported Roles
+Super Admin
+Admin
+Manager
+Viewer
+Each role has specific permissions and access levels to ensure secure operation across the platform.
+Email Notification System
+The platform uses Nodemailer and AWS services to automate communication workflows.
+Supported notifications include:
+Event registration confirmations
+Event reminders
+Activity updates
+Administrative notifications
+Password recovery emails
+General announcements
+Performance & Scalability
+The application is designed using a modular architecture that supports future growth and expansion.
+Key considerations include:
+Modular NestJS architecture
+Cloud-based AWS deployment
+Optimized API communication
+Query caching with TanStack Query
+Efficient state management
+Reusable components
+Maintainable code structure
+
+Security
+Security is a core component of the platform architecture.
+Implemented measures include:
+JWT Authentication
+Role-Based Access Control (RBAC)
+Request Validation
+Secure Password Handling
+Route Protection
+Environment-Based Configuration
+Secure API Communication
+
+About Hamroh
+Hamroh is an organization focused on creating educational, cultural, and community-driven opportunities. The Hamroh Admin Panel serves as the operational platform that supports the management of programs, events, activities, and participant engagement.
