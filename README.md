@@ -58,12 +58,11 @@ Official website: [https://hamroh.org](https://hamroh.org)
 - User activity monitoring
 - Secure authentication and authorization
 
-### Communication System
+### Announcements
 
-- Automated email notifications
-- Event reminders
-- Announcements and updates
-- Password recovery emails
+- Create, edit, and publish internal announcements
+- Draft and published states
+- Visible inside the admin panel only
 
 ### Reporting & Analytics
 
@@ -85,8 +84,8 @@ Official website: [https://hamroh.org](https://hamroh.org)
 | Node.js | Runtime Environment |
 | AWS EC2 | Cloud Hosting |
 | AWS S3 | File Storage |
-| AWS SES | Email Delivery |
-| Nodemailer | Email Services |
+| Prisma | ORM |
+| PostgreSQL 16 | Database |
 | JWT | Authentication |
 | RBAC | Authorization |
 | REST API | API Layer |
@@ -124,7 +123,7 @@ Client Application (React + MUI)
       Database Services
             │
             ▼
- AWS Infrastructure (EC2, S3, SES)
+ AWS Infrastructure (EC2, S3)
 
  Authentication & Authorization
 The platform implements a secure access control system based on JWT authentication and Role-Based Access Control (RBAC).
@@ -134,15 +133,13 @@ Admin
 Manager
 Viewer
 Each role has specific permissions and access levels to ensure secure operation across the platform.
-Email Notification System
-The platform uses Nodemailer and AWS services to automate communication workflows.
-Supported notifications include:
-Event registration confirmations
-Event reminders
-Activity updates
-Administrative notifications
-Password recovery emails
-General announcements
+
+The panel is administrator-only. There is no public registration and no outgoing email of any kind:
+
+- Administrator accounts are created through the API by a Super Admin or Admin
+- The frontend exposes a login screen only, with no register form
+- Password resets are performed by an administrator updating the account through the API
+
 Performance & Scalability
 The application is designed using a modular architecture that supports future growth and expansion.
 Key considerations include:
