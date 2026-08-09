@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class QueryUserDto extends PaginationDto {
@@ -9,6 +9,14 @@ export class QueryUserDto extends PaginationDto {
   @IsOptional()
   @IsEnum(Role)
   role?: Role;
+
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Super admins only — narrow the list to one branch',
+  })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

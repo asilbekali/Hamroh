@@ -2,40 +2,77 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsDateString,
-  IsEmail,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
 export class CreateParticipantDto {
-  @ApiProperty({ example: 'Dilnoza Karimova' })
+  @ApiProperty({ example: 'Dilnoza', description: 'Ism' })
   @IsString()
   @MinLength(2)
-  @MaxLength(120)
-  fullName: string;
+  @MaxLength(60)
+  firstName: string;
 
-  @ApiProperty({ example: 'dilnoza@example.com' })
-  @IsEmail()
-  email: string;
+  @ApiProperty({ example: 'Karimova', description: 'Familiya' })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(60)
+  lastName: string;
 
-  @ApiPropertyOptional({ example: '+998901234567' })
+  @ApiPropertyOptional({ example: 'Baxtiyorovna', description: 'Sharifi' })
   @IsOptional()
   @IsString()
-  @MaxLength(30)
-  phone?: string;
+  @MaxLength(60)
+  middleName?: string;
 
-  @ApiPropertyOptional({ example: '2000-05-14T00:00:00.000Z' })
-  @IsOptional()
+  @ApiProperty({
+    example: '2000-05-14',
+    description: 'Tugʻilgan sana — toʻliq kun/oy/yil (YYYY-MM-DD)',
+  })
   @IsDateString()
-  dateOfBirth?: string;
+  birthDate: string;
 
-  @ApiPropertyOptional({ example: 'Chilanzar, Tashkent' })
+  @ApiProperty({ example: '+998901234567' })
+  @IsString()
+  @MinLength(7)
+  @MaxLength(30)
+  phone: string;
+
+  @ApiProperty({ example: 'Samarqand sh., Registon koʻchasi 12' })
+  @IsString()
+  @MinLength(3)
+  @MaxLength(255)
+  address: string;
+
+  @ApiPropertyOptional({
+    example: 'Yakkasaroy',
+    description: 'District ("tuman") — its own column in the Excel report',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  address?: string;
+  @MaxLength(120)
+  district?: string;
+
+  @ApiPropertyOptional({
+    example: 'Shoxjahon',
+    description: 'Neighbourhood ("mahalla") — its own column in the report',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  mahalla?: string;
+
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description:
+      'Required for super admins. Admins always get their own branch automatically.',
+  })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

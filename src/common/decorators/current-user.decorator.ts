@@ -3,8 +3,10 @@ import { Role } from '@prisma/client';
 
 export interface AuthUser {
   id: string;
-  email: string;
+  username: string;
   role: Role;
+  /** Null for SUPER_ADMIN, who is not tied to a single branch. */
+  branchId: string | null;
 }
 
 export const CurrentUser = createParamDecorator(

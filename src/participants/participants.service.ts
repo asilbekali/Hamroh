@@ -1,93 +1,140 @@
 import {
-  ConflictException,
+  BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildMeta } from '../common/dto/pagination.dto';
+import { AuthUser } from '../common/decorators/current-user.decorator';
+import {
+  assertBranchAccess,
+  branchScope,
+  isSuperAdmin,
+  resolveBranchIdForCreate,
+} from '../common/utils/scope.util';
+import { calculateAge, toDateOnly } from '../common/utils/date.util';
 import { CreateParticipantDto } from './dto/create-participant.dto';
 import { UpdateParticipantDto } from './dto/update-participant.dto';
 import { QueryParticipantDto } from './dto/query-participant.dto';
+
+const participantInclude = {
+  branch: { select: { id: true, name: true, region: true } },
+  createdBy: { select: { id: true, username: true, fullName: true } },
+  _count: { select: { attendances: true } },
+} satisfies Prisma.ParticipantInclude;
 
 @Injectable()
 export class ParticipantsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateParticipantDto) {
-    const email = dto.email.toLowerCase();
+  async create(dto: CreateParticipantDto, actor: AuthUser) {
+    const branchId = resolveBranchIdForCreate(actor, dto.branchId);
+    await this.assertBranchUsable(branchId);
 
-    const exists = await this.prisma.participant.findUnique({
-      where: { email },
-    });
-
-    if (exists) {
-      throw new ConflictException(
-        'A participant with this email already exists',
-      );
-    }
-
-    return this.prisma.participant.create({
+    const participant = await this.prisma.participant.create({
       data: {
-        ...dto,
-        email,
-        ...(dto.dateOfBirth && { dateOfBirth: new Date(dto.dateOfBirth) }),
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        middleName: dto.middleName,
+        birthDate: toDateOnly(dto.birthDate),
+        phone: dto.phone,
+        address: dto.address,
+        district: dto.district,
+        mahalla: dto.mahalla,
+        notes: dto.notes,
+        isActive: dto.isActive,
+        branchId,
+        createdById: actor.id,
       },
+      include: participantInclude,
     });
+
+    return this.decorate(participant);
   }
 
-  async findAll(query: QueryParticipantDto) {
+  async findAll(query: QueryParticipantDto, actor: AuthUser) {
     const {
       page = 1,
       limit = 10,
       search,
       order = 'desc',
-      isActive,
-      eventId,
+      sortBy = 'createdAt',
+      branchId,
+      region,
       activityId,
+      isActive,
     } = query;
 
+    if (region && !isSuperAdmin(actor)) {
+      throw new ForbiddenException('Only super admins can filter by region');
+    }
+
     const where: Prisma.ParticipantWhereInput = {
+      ...branchScope(actor, branchId),
+      ...(region && { branch: { region } }),
       ...(isActive !== undefined && { isActive }),
-      ...((eventId || activityId) && {
-        registrations: {
-          some: {
-            ...(eventId && { eventId }),
-            ...(activityId && { activityId }),
-          },
-        },
-      }),
+      ...(activityId && { attendances: { some: { activityId } } }),
       ...(search && {
         OR: [
-          { fullName: { contains: search, mode: 'insensitive' as const } },
-          { email: { contains: search, mode: 'insensitive' as const } },
+          { firstName: { contains: search, mode: 'insensitive' as const } },
+          { lastName: { contains: search, mode: 'insensitive' as const } },
+          { middleName: { contains: search, mode: 'insensitive' as const } },
           { phone: { contains: search, mode: 'insensitive' as const } },
+          { address: { contains: search, mode: 'insensitive' as const } },
+          { district: { contains: search, mode: 'insensitive' as const } },
+          { mahalla: { contains: search, mode: 'insensitive' as const } },
+          // A purely numeric search is treated as a lookup by № as well.
+          ...(/^\d+$/.test(search.trim())
+            ? [{ serialNumber: Number(search.trim()) }]
+            : []),
         ],
       }),
     };
 
-    const [data, total] = await this.prisma.$transaction([
+    // Secondary keys keep the ordering stable so the row numbers below do not
+    // shuffle between pages when the primary key ties.
+    const orderBy: Prisma.ParticipantOrderByWithRelationInput[] =
+      sortBy === 'lastName'
+        ? [{ lastName: order }, { firstName: order }, { id: 'asc' }]
+        : [{ [sortBy]: order }, { id: 'asc' }];
+
+    const [rows, total] = await this.prisma.$transaction([
       this.prisma.participant.findMany({
         where,
+        include: participantInclude,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { createdAt: order },
-        include: { _count: { select: { registrations: true } } },
+        orderBy,
       }),
       this.prisma.participant.count({ where }),
     ]);
 
-    return { data, meta: buildMeta(total, page, limit) };
+    return {
+      // `no` is the participant's own stable number, so it stays the same
+      // whatever the sort or page — which is what makes it searchable.
+      data: rows.map((row) => ({ no: row.serialNumber, ...this.decorate(row) })),
+      meta: buildMeta(total, page, limit),
+    };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor: AuthUser) {
     const participant = await this.prisma.participant.findUnique({
       where: { id },
       include: {
-        registrations: {
+        ...participantInclude,
+        attendances: {
+          take: 50,
+          orderBy: { date: 'desc' },
           include: {
-            event: { select: { id: true, title: true, startDate: true } },
-            activity: { select: { id: true, title: true } },
+            activity: {
+              select: {
+                id: true,
+                title: true,
+                slots: { select: { weekday: true, startTime: true } },
+              },
+            },
           },
         },
       },
@@ -97,39 +144,106 @@ export class ParticipantsService {
       throw new NotFoundException(`Participant with id ${id} not found`);
     }
 
-    return participant;
+    assertBranchAccess(actor, participant.branchId);
+
+    return this.decorate(participant);
   }
 
-  async update(id: string, dto: UpdateParticipantDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateParticipantDto, actor: AuthUser) {
+    const existing = await this.prisma.participant.findUnique({
+      where: { id },
+      select: { id: true, branchId: true },
+    });
 
-    if (dto.email) {
-      const email = dto.email.toLowerCase();
-      const taken = await this.prisma.participant.findFirst({
-        where: { email, NOT: { id } },
-      });
+    if (!existing) {
+      throw new NotFoundException(`Participant with id ${id} not found`);
+    }
 
-      if (taken) {
-        throw new ConflictException(
-          'A participant with this email already exists',
+    assertBranchAccess(actor, existing.branchId);
+
+    let branchId: string | undefined;
+    if (dto.branchId && dto.branchId !== existing.branchId) {
+      if (!isSuperAdmin(actor)) {
+        throw new ForbiddenException(
+          'Only a super admin can move someone to another branch',
         );
       }
 
-      dto.email = email;
+      await this.assertBranchUsable(dto.branchId);
+      branchId = dto.branchId;
     }
 
-    return this.prisma.participant.update({
+    const participant = await this.prisma.participant.update({
       where: { id },
       data: {
-        ...dto,
-        ...(dto.dateOfBirth && { dateOfBirth: new Date(dto.dateOfBirth) }),
+        ...(dto.firstName !== undefined && { firstName: dto.firstName }),
+        ...(dto.lastName !== undefined && { lastName: dto.lastName }),
+        ...(dto.middleName !== undefined && { middleName: dto.middleName }),
+        ...(dto.birthDate && { birthDate: toDateOnly(dto.birthDate) }),
+        ...(dto.phone !== undefined && { phone: dto.phone }),
+        ...(dto.address !== undefined && { address: dto.address }),
+        ...(dto.district !== undefined && { district: dto.district }),
+        ...(dto.mahalla !== undefined && { mahalla: dto.mahalla }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+        ...(branchId && { branchId }),
       },
+      include: participantInclude,
     });
+
+    return this.decorate(participant);
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, actor: AuthUser) {
+    const existing = await this.prisma.participant.findUnique({
+      where: { id },
+      select: { id: true, branchId: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Participant with id ${id} not found`);
+    }
+
+    assertBranchAccess(actor, existing.branchId);
+
     await this.prisma.participant.delete({ where: { id } });
     return { message: 'Participant deleted successfully', id };
+  }
+
+  /** Adds the derived display fields the list and detail views need. */
+  private decorate<
+    T extends {
+      firstName: string;
+      lastName: string;
+      middleName: string | null;
+      birthDate: Date;
+    },
+  >(participant: T) {
+    return {
+      ...participant,
+      fullName: [
+        participant.lastName,
+        participant.firstName,
+        participant.middleName,
+      ]
+        .filter(Boolean)
+        .join(' '),
+      age: calculateAge(participant.birthDate),
+    };
+  }
+
+  private async assertBranchUsable(branchId: string) {
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: branchId },
+      select: { id: true, isActive: true },
+    });
+
+    if (!branch) {
+      throw new NotFoundException(`Branch with id ${branchId} not found`);
+    }
+
+    if (!branch.isActive) {
+      throw new BadRequestException('This branch is deactivated');
+    }
   }
 }

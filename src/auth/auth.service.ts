@@ -16,17 +16,18 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
+      where: { username: dto.username.toLowerCase() },
+      include: { branch: { select: { id: true, name: true, region: true } } },
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Invalid username or password');
     }
 
     const passwordMatches = await bcrypt.compare(dto.password, user.password);
 
     if (!passwordMatches) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Invalid username or password');
     }
 
     if (!user.isActive) {
@@ -40,8 +41,9 @@ export class AuthService {
 
     const payload: JwtPayload = {
       sub: user.id,
-      email: user.email,
+      username: user.username,
       role: user.role,
+      branchId: user.branchId,
     };
 
     return {
@@ -52,9 +54,10 @@ export class AuthService {
       }),
       user: {
         id: user.id,
+        username: user.username,
         fullName: user.fullName,
-        email: user.email,
         role: user.role,
+        branch: user.branch,
       },
     };
   }
@@ -64,13 +67,14 @@ export class AuthService {
       where: { id: userId },
       select: {
         id: true,
+        username: true,
         fullName: true,
-        email: true,
         phone: true,
         role: true,
         isActive: true,
         lastLogin: true,
         createdAt: true,
+        branch: { select: { id: true, name: true, region: true } },
       },
     });
   }

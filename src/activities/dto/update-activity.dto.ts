@@ -1,4 +1,7 @@
-import { PartialType } from '@nestjs/swagger';
+import { OmitType, PartialType } from '@nestjs/swagger';
 import { CreateActivityDto } from './create-activity.dto';
 
-export class UpdateActivityDto extends PartialType(CreateActivityDto) {}
+/** An activity never moves between branches — recreate it instead. */
+export class UpdateActivityDto extends PartialType(
+  OmitType(CreateActivityDto, ['branchId'] as const),
+) {}

@@ -29,49 +29,58 @@ Official website: [https://hamroh.org](https://hamroh.org)
 
 ## Key Features
 
-### Event Management
+### Dashboard & Calendar
 
-- Create, update, publish, and archive events
-- Manage event schedules and timelines
-- Monitor participant registrations
-- Assign event coordinators
-- Track event status
+- Branch-scoped dashboard: an admin sees their own branch, a super admin the whole network
+- Apple-Calendar style month view of every activity date
+- Clicking a date reveals which activities run that day, at what time, with which trainer
+- Recurring weekly schedules are expanded into concrete dates by the API
+
+### Branch Management (Regional Split)
+
+- Super admins create branches, each tied to one of the 14 regions of Uzbekistan
+- Admins and trainers are attached to a branch and see only that branch's data
+- A Samarkand admin sees Samarkand people; a Tashkent admin sees Tashkent people
+- Super admins see every branch and may filter by branch or region
+
+### User (Participant) Management
+
+- Full name split into first name, last name and patronymic
+- Full date of birth, with age derived automatically
+- Address and phone number; no email is stored
+- Records are numbered and sortable by name, birth date or registration date
+- Admins create people inside their own branch automatically; super admins pick the branch
+
+### Staff & Trainers
+
+- Username + password authentication, no email anywhere
+- Super admins create branch admins; branch admins create trainers
+- Trainers are assignable to activities
 
 ### Activity Management
 
-- Create and manage organizational activities
-- Organize activities by category
-- Schedule recurring activities
-- Track engagement and participation
+- Weekly recurring schedule: any weekdays, any start time, any duration
+- Created empty — participants are attached afterwards, on the day they show up
+- A trainer may run many activities, but never two that overlap in day and time
+- Schedules can be expanded into concrete dates
 
-### Participant Management
+### Attendance
 
-- Store participant information
-- Manage registrations
-- Track attendance
-- Search and filter participant records
+- Attendance is recorded per activity, per date, per participant
+- Only dates that fall on a scheduled weekday are accepted
+- Capacity limits are enforced per session
 
-### User Management
+### Announcements & Todo Lists
 
-- Administrator account management
-- Role-based permissions
-- User activity monitoring
-- Secure authentication and authorization
+- Announcements carry a checklist of todo items
+- A super admin assigns each todo to a branch admin
+- Admins see their own work queue and update the status of their items
 
-### Announcements
+### Reporting
 
-- Create, edit, and publish internal announcements
-- Draft and published states
-- Visible inside the admin panel only
-
-### Reporting & Analytics
-
-- Event statistics
-- Participation reports
-- Activity performance insights
-- Administrative dashboards
-
----
+- Excel (.xlsx) export for participants and for activities
+- Each report covers the last month, the last 3 months, or the last year
+- Reports respect branch scope: admins export their branch, super admins export everything
 
 ## Technology Stack
 
@@ -128,15 +137,15 @@ Client Application (React + MUI)
  Authentication & Authorization
 The platform implements a secure access control system based on JWT authentication and Role-Based Access Control (RBAC).
 Supported Roles
-Super Admin
-Admin
-Manager
-Viewer
+Super Admin — full access to every branch, creates branches and admins
+Admin — full access to a single branch only
+Trainer — runs activities and records attendance inside their branch
 Each role has specific permissions and access levels to ensure secure operation across the platform.
 
 The panel is administrator-only. There is no public registration and no outgoing email of any kind:
 
-- Administrator accounts are created through the API by a Super Admin or Admin
+- Administrator accounts are created through the API by a Super Admin
+- Accounts sign in with a username and password; no email address is stored
 - The frontend exposes a login screen only, with no register form
 - Password resets are performed by an administrator updating the account through the API
 
@@ -161,9 +170,6 @@ Secure Password Handling
 Route Protection
 Environment-Based Configuration
 Secure API Communication
-
-About Hamroh
-Hamroh is an organization focused on creating educational, cultural, and community-driven opportunities. The Hamroh Admin Panel serves as the operational platform that supports the management of programs, events, activities, and participant engagement.
 
 ## About Hamroh
 
