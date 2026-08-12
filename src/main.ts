@@ -33,7 +33,7 @@ async function bootstrap() {
     SwaggerModule.createDocument(app, config),
   );
 
-  const port = process.env.PORT ?? 3000;
+  const port = process.env.PORT ?? 3001;
   await app.listen(port);
 
   Logger.log(`Hamroh API running on http://localhost:${port}/api`, 'Bootstrap');
