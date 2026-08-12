@@ -12,6 +12,7 @@ import { ActivitiesModule } from './activities/activities.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ReportsModule } from './reports/reports.module';
+import { AuditModule } from './audit/audit.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -19,6 +20,7 @@ import { RolesGuard } from './common/guards/roles.guard';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    AuditModule,
     BootstrapModule,
     AuthModule,
     DashboardModule,

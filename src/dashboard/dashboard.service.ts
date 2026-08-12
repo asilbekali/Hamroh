@@ -61,9 +61,15 @@ export class DashboardService {
       attendanceToday,
       openTodos,
     ] = await this.prisma.$transaction([
-      this.prisma.participant.count({ where: scope }),
-      this.prisma.participant.count({ where: { ...scope, isActive: true } }),
-      this.prisma.activity.count({ where: { ...scope, isActive: true } }),
+      // The dashboard shows the club as it stands today, so removed rows are
+      // left out here — the reports are the place their history lives on.
+      this.prisma.participant.count({ where: { ...scope, deletedAt: null } }),
+      this.prisma.participant.count({
+        where: { ...scope, deletedAt: null, isActive: true },
+      }),
+      this.prisma.activity.count({
+        where: { ...scope, deletedAt: null, isActive: true },
+      }),
       this.prisma.user.count({
         where: { ...scope, role: Role.TRAINER, isActive: true },
       }),
@@ -73,6 +79,7 @@ export class DashboardService {
       this.prisma.activity.count({
         where: {
           ...scope,
+          deletedAt: null,
           isActive: true,
           slots: { some: { weekday } },
           startDate: { lte: today },
@@ -117,6 +124,7 @@ export class DashboardService {
     const activities = await this.prisma.activity.findMany({
       where: {
         ...scope,
+        deletedAt: null,
         isActive: true,
         ...(query.trainerId && { trainerId: query.trainerId }),
         startDate: { lte: to },
@@ -195,6 +203,7 @@ export class DashboardService {
     const activities = await this.prisma.activity.findMany({
       where: {
         ...scope,
+        deletedAt: null,
         isActive: true,
         slots: { some: { weekday } },
         startDate: { lte: date },

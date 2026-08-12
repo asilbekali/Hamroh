@@ -87,7 +87,9 @@ model User {
   branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   createdParticipants Participant[]        @relation("ParticipantCreator")
+  removedParticipants Participant[]        @relation("ParticipantRemover")
   createdActivities   Activity[]           @relation("ActivityCreator")
+  removedActivities   Activity[]           @relation("ActivityRemover")
   trainedActivities   Activity[]           @relation("ActivityTrainer")
   recordedAttendances Attendance[]         @relation("AttendanceRecorder")
   announcements       Announcement[]       @relation("AnnouncementAuthor")
@@ -122,11 +124,19 @@ model Participant {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
+  /// Set when an admin removes the person from the working lists. The row
+  /// itself is never removed, because the reports are built from it and a
+  /// report must stay whole once the visits behind it happened. Only a manual
+  /// DELETE in the database can take the row away.
+  deletedAt   DateTime? @map("deleted_at")
+  deletedById String?   @map("deleted_by_id") @db.Uuid
+
   branchId    String  @map("branch_id") @db.Uuid
   createdById String? @map("created_by_id") @db.Uuid
 
   branch    Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
   createdBy User?  @relation("ParticipantCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  deletedBy User?  @relation("ParticipantRemover", fields: [deletedById], references: [id], onDelete: SetNull)
 
   attendances Attendance[]
   enrollments ActivityEnrollment[]
@@ -134,6 +144,7 @@ model Participant {
   @@index([branchId])
   @@index([lastName, firstName])
   @@index([createdAt])
+  @@index([deletedAt])
   @@map("participants")
 }
 
@@ -151,6 +162,12 @@ model Activity {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
+  /// Same as on Participant: removing an activity only hides it from the
+  /// working lists. Its attendance rows are the visits report, so the row
+  /// stays until someone deletes it by hand in the database.
+  deletedAt   DateTime? @map("deleted_at")
+  deletedById String?   @map("deleted_by_id") @db.Uuid
+
   branchId    String  @map("branch_id") @db.Uuid
   trainerId   String? @map("trainer_id") @db.Uuid
   createdById String? @map("created_by_id") @db.Uuid
@@ -158,6 +175,7 @@ model Activity {
   branch    Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
   trainer   User?  @relation("ActivityTrainer", fields: [trainerId], references: [id], onDelete: SetNull)
   createdBy User?  @relation("ActivityCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  deletedBy User?  @relation("ActivityRemover", fields: [deletedById], references: [id], onDelete: SetNull)
 
   /// The weekly schedule. Each weekday carries its own time and duration.
   slots       ActivitySlot[]
@@ -166,6 +184,7 @@ model Activity {
 
   @@index([branchId])
   @@index([trainerId])
+  @@index([deletedAt])
   @@map("activities")
 }
 

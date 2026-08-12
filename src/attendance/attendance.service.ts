@@ -7,7 +7,11 @@ import { AttendanceStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildMeta } from '../common/dto/pagination.dto';
 import { AuthUser } from '../common/decorators/current-user.decorator';
-import { assertBranchAccess, branchScope } from '../common/utils/scope.util';
+import {
+  assertBranchAccess,
+  branchScope,
+  isSuperAdmin,
+} from '../common/utils/scope.util';
 import {
   formatDateOnly,
   isoWeekday,
@@ -55,10 +59,12 @@ export class AttendanceService {
         startDate: true,
         endDate: true,
         capacity: true,
+        deletedAt: true,
       },
     });
 
-    if (!activity) {
+    // A removed activity keeps its history but takes no new records.
+    if (!activity || activity.deletedAt) {
       throw new NotFoundException(`Activity with id ${activityId} not found`);
     }
 
@@ -66,12 +72,14 @@ export class AttendanceService {
 
     const date = toDateOnly(dto.date);
 
-    // Attendance records who actually turned up, so it can only be written for
-    // a session that has already run. Without this a future date would be
-    // accepted and then never appear in any report, whose windows end today.
-    if (date > toDateOnly(new Date())) {
+    // A branch admin marks the session they have just run, so today is the only
+    // date they may write — that keeps the register a record of what happened
+    // rather than something filled in from memory weeks later. A super admin is
+    // the one who fixes the register, so any scheduled date is open to them,
+    // whether it has already passed or is still to come.
+    if (!isSuperAdmin(actor) && date.getTime() !== toDateOnly(new Date()).getTime()) {
       throw new BadRequestException(
-        `${formatDateOnly(date)} is in the future. Attendance can only be recorded for a session that has already taken place.`,
+        `${formatDateOnly(date)} is not today. Only a super admin can record attendance for another day — ask them to correct it.`,
       );
     }
 
@@ -82,7 +90,7 @@ export class AttendanceService {
     ];
 
     const participants = await this.prisma.participant.findMany({
-      where: { id: { in: participantIds } },
+      where: { id: { in: participantIds }, deletedAt: null },
       select: {
         id: true,
         branchId: true,

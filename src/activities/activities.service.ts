@@ -96,6 +96,9 @@ export class ActivitiesService {
     const weekday = onDate ? isoWeekday(onDate) : dayOfWeek;
 
     const where: Prisma.ActivityWhereInput = {
+      // Removed activities drop out of the working lists but stay in the
+      // reports, which read the rows straight from the table.
+      deletedAt: null,
       ...branchScope(actor, branchId),
       // A trainer only ever sees the activities they run.
       ...(actor.role === Role.TRAINER
@@ -141,7 +144,7 @@ export class ActivitiesService {
       include: activityInclude,
     });
 
-    if (!activity) {
+    if (!activity || activity.deletedAt) {
       throw new NotFoundException(`Activity with id ${id} not found`);
     }
 
@@ -203,11 +206,25 @@ export class ActivitiesService {
     });
   }
 
+  /**
+   * Retires the activity instead of erasing it: its attendance rows are the
+   * visits report, and a hard delete would cascade them away and rewrite a
+   * period that has already been reported on. Erasing for real is a manual
+   * DELETE in the database.
+   */
   async remove(id: string, actor: AuthUser) {
     await this.findOne(id, actor);
 
-    await this.prisma.activity.delete({ where: { id } });
-    return { message: 'Activity deleted successfully', id };
+    await this.prisma.activity.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedById: actor.id, isActive: false },
+    });
+
+    return {
+      message:
+        'Activity removed. Its attendance stays in the reports and can only be erased directly in the database.',
+      id,
+    };
   }
 
   /**

@@ -49,7 +49,15 @@ export class ReportsService {
       registeredAt: formatDateOnly(row.createdAt),
       isNewInPeriod: row.createdAt >= from && row.createdAt <= to,
       visitsInPeriod: row._count.attendances,
-      status: row.isActive ? 'Faol' : 'Nofaol',
+      // Someone an admin removed still belongs in the report: the visits behind
+      // these numbers happened. They are only labelled, never dropped.
+      isRemoved: row.deletedAt !== null,
+      removedAt: row.deletedAt ? formatDateOnly(row.deletedAt) : null,
+      status: row.deletedAt
+        ? 'Oʻchirilgan'
+        : row.isActive
+          ? 'Faol'
+          : 'Nofaol',
     }));
 
     return {
@@ -59,6 +67,7 @@ export class ReportsService {
       to: formatDateOnly(to),
       total: data.length,
       newInPeriod: data.filter((row) => row.isNewInPeriod).length,
+      removed: data.filter((row) => row.isRemoved).length,
       data,
     };
   }
@@ -241,7 +250,15 @@ export class ReportsService {
         averagePerSession: heldSessions.size
           ? Number((row.attendances.length / heldSessions.size).toFixed(1))
           : 0,
-        status: row.isActive ? 'Faol' : 'Nofaol',
+        // A retired activity keeps its line here — the sessions it held are
+        // part of the period, whatever happened to it afterwards.
+        isRemoved: row.deletedAt !== null,
+        removedAt: row.deletedAt ? formatDateOnly(row.deletedAt) : null,
+        status: row.deletedAt
+          ? 'Oʻchirilgan'
+          : row.isActive
+            ? 'Faol'
+            : 'Nofaol',
       };
     });
 
@@ -252,6 +269,7 @@ export class ReportsService {
       to: formatDateOnly(to),
       total: data.length,
       totalVisits: data.reduce((sum, row) => sum + row.totalVisits, 0),
+      removed: data.filter((row) => row.isRemoved).length,
       data,
     };
   }

@@ -15,7 +15,15 @@ import { QueryBranchDto } from './dto/query-branch.dto';
 import { AssignStaffDto } from './dto/assign-staff.dto';
 
 const branchInclude = {
-  _count: { select: { participants: true, activities: true, staff: true } },
+  // Removed people and activities keep their rows for the reports, so the
+  // counts shown on a branch have to skip them to stay truthful.
+  _count: {
+    select: {
+      participants: { where: { deletedAt: null } },
+      activities: { where: { deletedAt: null } },
+      staff: true,
+    },
+  },
 } satisfies Prisma.BranchInclude;
 
 @Injectable()
@@ -153,6 +161,24 @@ export class BranchesService {
     if (branch._count.participants > 0 || branch._count.activities > 0) {
       throw new ConflictException(
         'This branch still has participants or activities. Move them first, or deactivate the branch instead.',
+      );
+    }
+
+    // Rows removed from the working lists are still here, holding up the
+    // reports. Dropping the branch would take them — and the history behind
+    // them — with it, so the branch can only be deactivated from now on.
+    const [retiredParticipants, retiredActivities] = await Promise.all([
+      this.prisma.participant.count({
+        where: { branchId: id, deletedAt: { not: null } },
+      }),
+      this.prisma.activity.count({
+        where: { branchId: id, deletedAt: { not: null } },
+      }),
+    ]);
+
+    if (retiredParticipants > 0 || retiredActivities > 0) {
+      throw new ConflictException(
+        'This branch holds removed participants or activities that the reports are built from. Deactivate the branch instead — its history can only be erased directly in the database.',
       );
     }
 

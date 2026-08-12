@@ -72,6 +72,9 @@ export class ParticipantsService {
     }
 
     const where: Prisma.ParticipantWhereInput = {
+      // Removed people are hidden everywhere but the reports, which read the
+      // rows directly so a past period never loses the visits behind it.
+      deletedAt: null,
       ...branchScope(actor, branchId),
       ...(region && { branch: { region } }),
       ...(isActive !== undefined && { isActive }),
@@ -140,7 +143,7 @@ export class ParticipantsService {
       },
     });
 
-    if (!participant) {
+    if (!participant || participant.deletedAt) {
       throw new NotFoundException(`Participant with id ${id} not found`);
     }
 
@@ -152,10 +155,10 @@ export class ParticipantsService {
   async update(id: string, dto: UpdateParticipantDto, actor: AuthUser) {
     const existing = await this.prisma.participant.findUnique({
       where: { id },
-      select: { id: true, branchId: true },
+      select: { id: true, branchId: true, deletedAt: true },
     });
 
-    if (!existing) {
+    if (!existing || existing.deletedAt) {
       throw new NotFoundException(`Participant with id ${id} not found`);
     }
 
@@ -194,20 +197,36 @@ export class ParticipantsService {
     return this.decorate(participant);
   }
 
+  /**
+   * Takes the person off the working lists without touching their history.
+   *
+   * A hard delete would cascade their attendance rows away, and those rows are
+   * what the reports are made of — a period already reported on would quietly
+   * change. So the row is stamped instead, and only a manual DELETE in the
+   * database can remove it for good.
+   */
   async remove(id: string, actor: AuthUser) {
     const existing = await this.prisma.participant.findUnique({
       where: { id },
-      select: { id: true, branchId: true },
+      select: { id: true, branchId: true, deletedAt: true },
     });
 
-    if (!existing) {
+    if (!existing || existing.deletedAt) {
       throw new NotFoundException(`Participant with id ${id} not found`);
     }
 
     assertBranchAccess(actor, existing.branchId);
 
-    await this.prisma.participant.delete({ where: { id } });
-    return { message: 'Participant deleted successfully', id };
+    await this.prisma.participant.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedById: actor.id, isActive: false },
+    });
+
+    return {
+      message:
+        'Participant removed. Their visits stay in the reports and can only be erased directly in the database.',
+      id,
+    };
   }
 
   /** Adds the derived display fields the list and detail views need. */
